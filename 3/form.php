@@ -1,4 +1,5 @@
 <form action="" method="POST">
+  <input name="email" type="email" />
   <input name="fio" />
   <select name="year">
     <?php 
