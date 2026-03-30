@@ -45,5 +45,7 @@
         </select>
   <label for="biography">Биография</label>
   <input name="biography" />
+  <input type="checkbox" id="contract" name="contract" required> 
+  <label for="contract">С контрактом ознакомлен(а)</label>
   <input type="submit" value="ok" />
 </form>
