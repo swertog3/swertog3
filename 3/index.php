@@ -30,7 +30,7 @@ if (empty($_POST['year']) || !is_numeric($_POST['year']) || !preg_match('/^\d+$/
   $errors = TRUE;
 }
 
-if (empty($_POST['number']) || !is_numeric($_POST['number']) || !preg_match('@', $_POST['number'])) {
+if (empty($_POST['number']) || !is_numeric($_POST['number']) || preg_match('@', $_POST['number'])) {
   print('Заполните телефон.<br/>');
   $errors = TRUE;
 }
