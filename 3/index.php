@@ -25,7 +25,8 @@ if (empty($_POST['fio'])  || preg_match('/^\d+$/', $_POST['year']) ) {
   $errors = TRUE;
 }
 
-if (empty($_POST['year']) || !is_numeric($_POST['year']) || !preg_match('/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9]+.[a-zA-Z0-9]', $_POST['year'])) {
+$email = "someone@domain .local";
+if (empty($_POST['year']) || !is_numeric($_POST['year']) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
   print('Заполните год.<br/>');
   $errors = TRUE;
 }
