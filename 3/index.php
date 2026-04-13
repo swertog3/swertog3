@@ -37,7 +37,7 @@ if (empty($_POST['number']) || !is_numeric($_POST['number']) || preg_match('[0-9
 }
 
 $email = "someone@domain .local";
-if (empty($_POST['mail']) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+if ( !filter_var($email, FILTER_VALIDATE_EMAIL)) {
   print('Заполните почту.<br/>');
   $errors = TRUE;
 }
