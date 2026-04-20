@@ -13,8 +13,6 @@
   </select>
   <label for="number">Телефон</label>
   <input name="number" />
-  <label for="year">Дата рождения:</label>
-  <input name="year" />
   <label>Пол</label>
         <div>
           <input type="radio" id="cFiveOne" name="gender" value="cFiveOne" required> 
