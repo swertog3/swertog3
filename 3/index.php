@@ -20,7 +20,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'GET') {
 
 // Проверяем ошибки.
 $errors = FALSE;
-if (empty($_POST['fio'])  || preg_match('/^\d+$/', $_POST['fio']) || strlen(str($_POST['fio'])>10) ) {
+if (empty($_POST['fio'])  || preg_match('/^\d+$/', $_POST['fio']) || strlen(implode("",$_POST['fio'])>10) ) {
   print('Заполните имя.<br/>');
   $errors = TRUE;
 }
