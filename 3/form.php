@@ -1,6 +1,6 @@
 <form action="" method="POST">
-  <label for="email">E-mail</label>
-  <input name="email" type="email" />
+  <label for="mail">E-mail</label>
+  <input name="mail" type="mail" />
   <label for="fio">ФИО</label>
   <input name="fio" />
   <label for="year">Год</label>
