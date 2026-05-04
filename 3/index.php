@@ -31,7 +31,7 @@ if (empty($_POST['year']) || !is_numeric($_POST['year']) ) {
   $errors = TRUE;
 }
 
-if (empty($_POST['number']) || !filter_var($_POST['number'],FILTER_SANITIZE_NUMBER_INT)) {
+if (empty($_POST['number']) || !preg_match('/^[\s()+-]*([0-9][\s()+-]*){6,20}$/')) {
   print('Заполните телефон.<br/>');
   $errors = TRUE;
 }
