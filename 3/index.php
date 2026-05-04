@@ -20,7 +20,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'GET') {
 
 // Проверяем ошибки.
 $errors = FALSE;
-if (empty($_POST['fio'])  || !preg_match('/[a-zA-zА-Яа-я ]/', $_POST['fio']) || strlen($_POST['fio'])<5 || !strlen($_POST['fio'])>100) {
+if (empty($_POST['fio'])  || !preg_match(/^[a-zA-zА-Яа-яЁё ]+$/, $_POST['fio']) || strlen($_POST['fio'])<5 || !strlen($_POST['fio'])>100) {
   print('Заполните имя.<br/>');
   $errors = TRUE;
 }
@@ -41,7 +41,7 @@ if (empty($_POST['mail']) || !filter_var($_POST['mail'], FILTER_VALIDATE_EMAIL))
   print('Заполните почту.<br/>');
   $errors = TRUE;
 }
-if (empty($_POST['gender'])  || !preg_match('/[a-zA-zА-Яа-я]/', $_POST['gender']) ) {
+if (empty($_POST['gender'])  || !preg_match(/^[a-zA-zА-Яа-я]+$/, $_POST['gender']) ) {
   print('Выберите пол.<br/>');
   $errors = TRUE;
 }
