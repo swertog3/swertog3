@@ -1,6 +1,7 @@
 <?php
 // Отправляем браузеру правильную кодировку,
 // файл index.php должен быть в кодировке UTF-8 без BOM.
+echo "<link rel='stylesheet' href='style.css'>";
 header('Content-Type: text/html; charset=UTF-8');
 
 // В суперглобальном массиве $_SERVER PHP сохраняет некторые заголовки запроса HTTP
