@@ -1,27 +1,25 @@
 <?php
-// includes/config.php - конфигурация базы данных
+// includes/config.php
 
-// НАСТРОЙКИ БД - ВАШИ РЕАЛЬНЫЕ ДАННЫЕ
-
-
-// CSRF защита
-define('CSRF_TOKEN_NAME', 'csrf_token');
-
-// ===== НАСТРОЙКИ СЕССИИ ДО session_start() =====
-// Эти настройки нужно делать ДО запуска сессии!
+// ===== НАСТРОЙКИ СЕССИИ =====
+// Сначала настройки
 ini_set('session.cookie_httponly', 1);
 ini_set('session.use_only_cookies', 1);
 ini_set('session.cookie_samesite', 'Strict');
 
-// ТЕПЕРЬ запускаем сессию
+// Потом запуск сессии
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
-// ==============================================
+// =============================
+
+// Настройки БД
 define('DB_HOST', 'localhost');
 define('DB_NAME', 'u82187');
 define('DB_USER', 'u82187');
 define('DB_PASS', '7220016');
+define('CSRF_TOKEN_NAME', 'csrf_token');
+
 // Подключение к БД
 try {
     $pdo = new PDO(
@@ -40,7 +38,7 @@ try {
     die("Ошибка подключения к базе данных. Пожалуйста, попробуйте позже.");
 }
 
-// Генерация CSRF токена
+// CSRF функции
 function generateCsrfToken() {
     if (empty($_SESSION[CSRF_TOKEN_NAME])) {
         $_SESSION[CSRF_TOKEN_NAME] = bin2hex(random_bytes(32));
@@ -48,7 +46,6 @@ function generateCsrfToken() {
     return $_SESSION[CSRF_TOKEN_NAME];
 }
 
-// Проверка CSRF токена
 function verifyCsrfToken($token) {
     if (!isset($_SESSION[CSRF_TOKEN_NAME])) {
         return false;
