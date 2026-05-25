@@ -262,8 +262,8 @@ $csrfToken = generateCsrfToken();
             <h2 class="section-title">О <span>проекте</span></h2>
             <div class="about-content">
                 <div class="about-text">
-                    <h3>Добро пожаловать</h3>
-                    <p>Заполните форму для участия в нашей программе</p>
+                    <h3>Я не хотел этого делать</h3>
+                    <p>но пришлось</p>
                 </div>
                 <div class="about-image">
                     <img src="images/team.jpg" alt="О проекте">
