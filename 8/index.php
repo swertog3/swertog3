@@ -298,25 +298,19 @@ $csrfToken = generateCsrfToken();
             <div class="registration-form" id="registrationFormContainer">
                 <?php if (isset($_GET['success']) && $_GET['success'] == 1): ?>
                     <div class="success-message">
-                        <i class="fas fa-check-circle"></i> 
-                        <strong>Данные успешно сохранены!</strong>
-                        <div class="credentials-box">
-                            <?php 
-                            // Сессия уже должна быть запущена через config.php
-                            $login = $_SESSION['last_registered_login'] ?? '';
-                            $password = $_SESSION['last_registered_password'] ?? '';
-                            
-                            // Для отладки - временно раскомментировать:
-                            // echo "<!-- Session data: login=" . htmlspecialchars($login) . " -->";
-                            ?>
-                            <p><strong>Ваш логин:</strong> <?php echo htmlspecialchars($login ?: 'Ошибка: логин не сохранён'); ?></p>
-                            <p><strong>Ваш пароль:</strong> <?php echo htmlspecialchars($password ?: 'Ошибка: пароль не сохранён'); ?></p>
-                            <p><small>Сохраните эти данные для входа в административную панель.</small></p>
-                        </div>
                         <?php 
-                        // Очищаем сессию после отображения
-                        unset($_SESSION['last_registered_login']);
-                        unset($_SESSION['last_registered_password']);
+                        // ОТЛАДКА: посмотрим, что в сессии
+                        echo "<!-- DEBUG: " . print_r($_SESSION, true) . " -->";
+                        
+                        $login = $_SESSION['last_registered_login'] ?? '';
+                        $password = $_SESSION['last_registered_password'] ?? '';
+                        ?>
+                        <p><strong>Ваш логин:</strong> <?php echo htmlspecialchars($login ?: 'Ошибка: логин не сохранён'); ?></p>
+                        <p><strong>Ваш пароль:</strong> <?php echo htmlspecialchars($password ?: 'Ошибка: пароль не сохранён'); ?></p>
+                        <?php 
+                        // НЕ удаляем сразу, чтобы увидеть
+                        // unset($_SESSION['last_registered_login']);
+                        // unset($_SESSION['last_registered_password']);
                         ?>
                     </div>
                 <?php endif; ?>
