@@ -2,10 +2,7 @@
 // includes/config.php - конфигурация базы данных
 
 // НАСТРОЙКИ БД - ВАШИ РЕАЛЬНЫЕ ДАННЫЕ
-define('DB_HOST', 'localhost');
-define('DB_NAME', 'u82187');
-define('DB_USER', 'u82187');
-define('DB_PASS', '7220016');
+
 
 // CSRF защита
 define('CSRF_TOKEN_NAME', 'csrf_token');
@@ -21,7 +18,10 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 // ==============================================
-
+define('DB_HOST', 'localhost');
+define('DB_NAME', 'u82187');
+define('DB_USER', 'u82187');
+define('DB_PASS', '7220016');
 // Подключение к БД
 try {
     $pdo = new PDO(
