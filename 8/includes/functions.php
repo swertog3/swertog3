@@ -138,13 +138,25 @@ function validateContract($contract, &$errors) {
 
 // Генерация логина и пароля
 function generateCredentials($fullname, $email) {
-    // Генерация логина из ФИО
+    // Генерация логина из ФИО (без mbstring)
     $nameParts = explode(' ', $fullname);
-    $login = strtolower(transliterate($nameParts[0]));
-    if (isset($nameParts[1])) {
-        $login .= '.' . strtolower(substr(transliterate($nameParts[1]), 0, 1));
+    
+    // Безопасное получение первого символа
+    $login = '';
+    if (!empty($nameParts[0])) {
+        $login = transliterate($nameParts[0]);
     }
+    
+    if (isset($nameParts[1]) && !empty($nameParts[1])) {
+        $firstChar = substr($nameParts[1], 0, 1);
+        $login .= '.' . transliterate($firstChar);
+    }
+    
+    // Добавляем случайные цифры
     $login .= rand(100, 999);
+    
+    // Приводим к нижнему регистру без mb_strtolower
+    $login = strtolower($login);
     
     // Генерация пароля
     $password = generateRandomPassword(10);
