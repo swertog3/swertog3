@@ -257,7 +257,20 @@ $csrfToken = generateCsrfToken();
             </button>
         </div>
     </nav>
-
+    <section id="about" class="about-section">
+        <div class="container">
+            <h2 class="section-title">О <span>проекте</span></h2>
+            <div class="about-content">
+                <div class="about-text">
+                    <h3>Добро пожаловать</h3>
+                    <p>Заполните форму для участия в нашей программе</p>
+                </div>
+                <div class="about-image">
+                    <img src="images/team.jpg" alt="О проекте">
+                </div>
+            </div>
+        </div>
+    </section>
     <!-- Секция с формой -->
     <section class="form-section" id="contact-form">
         <div class="container">
