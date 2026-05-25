@@ -138,31 +138,35 @@ function validateContract($contract, &$errors) {
 
 // Генерация логина и пароля
 function generateCredentials($fullname, $email) {
-    // Генерация логина из ФИО (без mbstring)
-    $nameParts = explode(' ', $fullname);
+    // Вариант 1: Генерируем логин из email (самый надёжный)
+    $emailParts = explode('@', $email);
+    $login = $emailParts[0];
     
-    // Безопасное получение первого символа
-    $login = '';
-    if (!empty($nameParts[0])) {
-        $login = transliterate($nameParts[0]);
-    }
+    // Оставляем только буквы, цифры, точки и подчёркивания
+    $login = preg_replace('/[^a-zA-Z0-9._]/', '', $login);
     
-    if (isset($nameParts[1]) && !empty($nameParts[1])) {
-        $firstChar = substr($nameParts[1], 0, 1);
-        $login .= '.' . transliterate($firstChar);
-    }
+    // Обрезаем до 50 символов
+    $login = substr($login, 0, 40);
     
-    // Добавляем случайные цифры
+    // Добавляем случайные цифры, чтобы избежать дубликатов
     $login .= rand(100, 999);
     
-    // Приводим к нижнему регистру без mb_strtolower
-    $login = strtolower($login);
+    // Убеждаемся, что логин не пустой
+    if (empty($login)) {
+        $login = 'user' . rand(10000, 99999);
+    }
     
-    // Генерация пароля
+    // Генерация пароля (только ASCII символы)
     $password = generateRandomPassword(10);
     $passwordHash = password_hash($password, PASSWORD_DEFAULT);
     
     return ['login' => $login, 'password' => $password, 'hash' => $passwordHash];
+}
+
+function generateRandomPassword($length = 10) {
+    // Только безопасные ASCII символы
+    $chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    return substr(str_shuffle($chars), 0, $length);
 }
 
 function transliterate($text) {
