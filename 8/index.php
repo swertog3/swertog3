@@ -10,6 +10,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         saveErrorsToCookies($errors, $_POST);
         header('Location: index.php');
         exit;
+    // После успешного сохранения в БД (перед header)
+    $pdo->commit();
+    
+    // Сохраняем в сессию
+    $_SESSION['last_registered_login'] = $credentials['login'];
+    $_SESSION['last_registered_password'] = $credentials['password'];
+    
+    // ОТЛАДКА: записываем в файл
+    file_put_contents('/tmp/debug_session.txt', date('Y-m-d H:i:s') . " - Login: " . $credentials['login'] . " - Password: " . $credentials['password'] . "\n", FILE_APPEND);
+    
+    // Также проверим, что записалось в сессию
+    error_log("SESSION after save: " . print_r($_SESSION, true));
+    
+    // Перенаправление
+    header('Location: index.php?success=1');
+    exit;
     }
     
     $errors = [];
