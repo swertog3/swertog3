@@ -179,10 +179,6 @@ function transliterate($text) {
     // Вместо mb_strtolower используем обычную, она работает с ASCII
     return str_replace($cyr, $lat, $text);
 }
-function generateRandomPassword($length = 10) {
-    $chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%';
-    return substr(str_shuffle($chars), 0, $length);
-}
 
 // Сохранение данных в cookies при успешной отправке (на год)
 function saveToCookies($data) {
