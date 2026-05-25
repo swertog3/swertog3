@@ -73,6 +73,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Сохраняем логин/пароль в сессию для отображения
         $_SESSION['last_registered_login'] = $credentials['login'];
         $_SESSION['last_registered_password'] = $credentials['password'];
+
+        error_log("Session login: " . ($_SESSION['last_registered_login'] ?? 'NOT SET'));
+        error_log("Session password: " . ($_SESSION['last_registered_password'] ?? 'NOT SET'));
         
         // Перенаправление для отображения сообщения об успехе
         header('Location: index.php?success=1');
