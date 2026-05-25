@@ -228,6 +228,19 @@ $csrfToken = generateCsrfToken();
         }
     </style>
 </head>
+<header class="header" id="home">
+    <!-- Фоновое видео -->
+    <video class="video-bg" autoplay muted loop playsinline>
+        <source src="video.mp4" type="video/mp4">
+        Ваш браузер не поддерживает видео.
+    </video>
+    <div class="header-overlay"></div>
+    <div class="header-content">
+        <h1>Регистрация участника</h1>
+        <p>Заполните форму для участия в программе</p>
+        <a href="#contact-form" class="btn">Заполнить форму</a>
+    </div>
+</header>
 <body>
     <!-- Навигация (ваша существующая) -->
     <nav class="navbar">
