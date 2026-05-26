@@ -479,9 +479,9 @@ $languagesList = $pdo->query("SELECT id, name FROM programming_languages")->fetc
                                         <button class="edit-btn" onclick="openEditModal(<?php echo htmlspecialchars(json_encode($user)); ?>)">
                                             <i class="fas fa-edit"></i> Ред.
                                         </button>
-                                        <a href="?delete=<?php echo $user['id']; ?>" class="delete-btn" onclick="return confirm('Удалить пользователя?')">
+                                       <button class="delete-btn" onclick="deleteUser(<?php echo $user['id']; ?>)">
                                             <i class="fas fa-trash"></i> Уд.
-                                        </a>
+                                       </button>
                                     </td>
                                 <?php endif; ?>
                             </tr>
