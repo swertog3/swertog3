@@ -366,7 +366,6 @@ async function deleteUser(userId) {
 
 // Функция редактирования
 async function editUser(userId) {
-    // Собираем данные из формы
     const fullname = document.getElementById('edit_fullname').value;
     const phone = document.getElementById('edit_phone').value;
     const email = document.getElementById('edit_email').value;
@@ -374,7 +373,6 @@ async function editUser(userId) {
     const gender = document.getElementById('edit_gender').value;
     const biography = document.getElementById('edit_biography').value;
     
-    // Собираем выбранные языки
     const languagesSelect = document.getElementById('edit_languages');
     const languages = [];
     for (let option of languagesSelect.options) {
@@ -383,8 +381,7 @@ async function editUser(userId) {
         }
     }
     
-    // Создаём FormData для отправки
-    const formData = new FormData();
+    const formData = new URLSearchParams();
     formData.append('action', 'update_user');
     formData.append('id', userId);
     formData.append('fullname', fullname);
@@ -401,7 +398,10 @@ async function editUser(userId) {
     try {
         const response = await fetch('api.php', {
             method: 'POST',
-            body: formData
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: formData.toString()
         });
         
         const result = await response.json();
@@ -413,7 +413,7 @@ async function editUser(userId) {
             alert('Ошибка: ' + result.message);
         }
     } catch (error) {
-        alert('Ошибка соединения: ' + error.message);
+        alert('Ошибка: ' + error.message);
     }
 }
 
