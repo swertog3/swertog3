@@ -51,80 +51,91 @@ if ($method === 'POST') {
     }
     
     // === ОБНОВЛЕНИЕ ПОЛЬЗОВАТЕЛЯ ===
-    if ($action === 'update_user') {
-        // Проверяем авторизацию (только админ)
-        $user = authenticate();
-        if (!$user || !isset($user['is_admin']) || !$user['is_admin']) {
-            echo json_encode(['success' => false, 'message' => 'Доступ запрещён']);
-            exit;
+   // === ОБНОВЛЕНИЕ ПОЛЬЗОВАТЕЛЯ ===
+if ($action === 'update_user') {
+    // Проверяем авторизацию (только админ)
+    $user = authenticate();
+    if (!$user || !isset($user['is_admin']) || !$user['is_admin']) {
+        echo json_encode(['success' => false, 'message' => 'Доступ запрещён']);
+        exit;
+    }
+    
+    $userId = (int)($_POST['id'] ?? 0);
+    
+    if ($userId <= 0) {
+        echo json_encode(['success' => false, 'message' => 'Неверный ID']);
+        exit;
+    }
+    
+    $errors = [];
+    
+    $fullname = validateFullname($_POST['fullname'] ?? '', $errors);
+    $phone = validatePhone($_POST['phone'] ?? '', $errors);
+    $email = validateEmail($_POST['email'] ?? '', $errors);
+    $birthdate = validateBirthdate($_POST['birthdate'] ?? '', $errors);
+    $gender = validateGender($_POST['gender'] ?? '', $errors);
+    $biography = validateBiography($_POST['biography'] ?? '', $errors);
+    
+    // ВАЖНО: обрабатываем языки отдельно, без вызова validateLanguages
+    $languages = isset($_POST['languages']) ? (array)$_POST['languages'] : [];
+    
+    // Получаем допустимые ID языков из БД
+    $stmt = $pdo->query("SELECT id FROM programming_languages");
+    $validIds = $stmt->fetchAll(PDO::FETCH_COLUMN);
+    
+    $validLanguages = [];
+    foreach ($languages as $langId) {
+        if (in_array($langId, $validIds)) {
+            $validLanguages[] = (int)$langId;
         }
+    }
+    
+    // Разрешаем пустой массив языков (пользователь может снять все галочки)
+    // НЕ проверяем на empty - это не ошибка
+    
+    if (!empty($errors)) {
+        echo json_encode(['success' => false, 'message' => 'Ошибки валидации', 'errors' => $errors]);
+        exit;
+    }
+    
+    try {
+        $pdo->beginTransaction();
         
-        $userId = (int)($_POST['id'] ?? 0);
+        $stmt = $pdo->prepare("
+            UPDATE users SET 
+                fullname = ?, phone = ?, email = ?, 
+                birthdate = ?, gender = ?, biography = ?
+            WHERE id = ?
+        ");
+        $stmt->execute([$fullname, $phone, $email, $birthdate, $gender, $biography, $userId]);
         
-        if ($userId <= 0) {
-            echo json_encode(['success' => false, 'message' => 'Неверный ID']);
-            exit;
-        }
+        // Обновляем языки - сначала удаляем старые
+        $stmt = $pdo->prepare("DELETE FROM user_languages WHERE user_id = ?");
+        $stmt->execute([$userId]);
         
-        $errors = [];
-        
-        $fullname = validateFullname($_POST['fullname'] ?? '', $errors);
-        $phone = validatePhone($_POST['phone'] ?? '', $errors);
-        $email = validateEmail($_POST['email'] ?? '', $errors);
-        $birthdate = validateBirthdate($_POST['birthdate'] ?? '', $errors);
-        $gender = validateGender($_POST['gender'] ?? '', $errors);
-        $biography = validateBiography($_POST['biography'] ?? '', $errors);
-        
-        // Валидация языков
-        $languages = isset($_POST['languages']) ? (array)$_POST['languages'] : [];
-        $stmt = $pdo->query("SELECT id FROM programming_languages");
-        $validIds = $stmt->fetchAll(PDO::FETCH_COLUMN);
-        $validLanguages = [];
-        foreach ($languages as $langId) {
-            if (in_array($langId, $validIds)) {
-                $validLanguages[] = (int)$langId;
+        // Добавляем новые (даже если массив пустой - ничего не добавляем)
+        if (!empty($validLanguages)) {
+            $stmtLang = $pdo->prepare("INSERT INTO user_languages (user_id, language_id) VALUES (?, ?)");
+            foreach ($validLanguages as $langId) {
+                $stmtLang->execute([$userId, $langId]);
             }
         }
+        
+        $pdo->commit();
+        
+        echo json_encode(['success' => true, 'message' => 'Данные обновлены']);
+        
+    } catch (PDOException $e) {
+        $pdo->rollBack();
+        echo json_encode(['success' => false, 'message' => 'Ошибка БД: ' . $e->getMessage()]);
+    }
+    exit;
+}
         
         if (empty($validLanguages)) {
             $errors['languages'] = 'Выберите хотя бы один язык';
         }
         
-        if (!empty($errors)) {
-            echo json_encode(['success' => false, 'message' => 'Ошибки валидации', 'errors' => $errors]);
-            exit;
-        }
-        
-        try {
-            $pdo->beginTransaction();
-            
-            $stmt = $pdo->prepare("
-                UPDATE users SET 
-                    fullname = ?, phone = ?, email = ?, 
-                    birthdate = ?, gender = ?, biography = ?
-                WHERE id = ?
-            ");
-            $stmt->execute([$fullname, $phone, $email, $birthdate, $gender, $biography, $userId]);
-            
-            // Обновляем языки
-            $stmt = $pdo->prepare("DELETE FROM user_languages WHERE user_id = ?");
-            $stmt->execute([$userId]);
-            
-            $stmtLang = $pdo->prepare("INSERT INTO user_languages (user_id, language_id) VALUES (?, ?)");
-            foreach ($validLanguages as $langId) {
-                $stmtLang->execute([$userId, $langId]);
-            }
-            
-            $pdo->commit();
-            
-            echo json_encode(['success' => true, 'message' => 'Данные обновлены']);
-            
-        } catch (PDOException $e) {
-            $pdo->rollBack();
-            echo json_encode(['success' => false, 'message' => 'Ошибка: ' . $e->getMessage()]);
-        }
-        exit;
-    }
     
     // === РЕГИСТРАЦИЯ НОВОГО ПОЛЬЗОВАТЕЛЯ ===
     if ($action === 'register') {
