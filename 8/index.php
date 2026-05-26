@@ -306,6 +306,7 @@ $csrfToken = generateCsrfToken();
                 
                 <form id="mainForm" data-api-url="api.php">
                     <input type="hidden" name="csrf_token" value="<?php echo $csrfToken; ?>">
+                    <input type="hidden" name="action" value="register">
                     
                     <!-- ФИО -->
                     <div class="form-group">
