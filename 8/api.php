@@ -7,7 +7,113 @@ header('Access-Control-Allow-Headers: Content-Type, Authorization');
 
 require_once 'includes/config.php';
 require_once 'includes/functions.php';
-
+// Обработка POST запросов (удаление и обновление)
+if ($method === 'POST') {
+    $action = $_POST['action'] ?? '';
+    
+    // ===== УДАЛЕНИЕ ПОЛЬЗОВАТЕЛЯ =====
+    if ($action === 'delete_user') {
+        // Проверяем авторизацию (только админ)
+        $user = authenticate();
+        if (!$user || !isset($user['is_admin']) || !$user['is_admin']) {
+            echo json_encode(['success' => false, 'message' => 'Доступ запрещён']);
+            exit;
+        }
+        
+        $userId = (int)($_POST['id'] ?? 0);
+        
+        if ($userId <= 0) {
+            echo json_encode(['success' => false, 'message' => 'Неверный ID']);
+            exit;
+        }
+        
+        try {
+            $stmt = $pdo->prepare("DELETE FROM users WHERE id = ?");
+            $stmt->execute([$userId]);
+            
+            echo json_encode(['success' => true, 'message' => 'Пользователь удалён']);
+        } catch (PDOException $e) {
+            echo json_encode(['success' => false, 'message' => 'Ошибка: ' . $e->getMessage()]);
+        }
+        exit;
+    }
+    
+    // ===== ОБНОВЛЕНИЕ ПОЛЬЗОВАТЕЛЯ =====
+    if ($action === 'update_user') {
+        // Проверяем авторизацию (только админ)
+        $user = authenticate();
+        if (!$user || !isset($user['is_admin']) || !$user['is_admin']) {
+            echo json_encode(['success' => false, 'message' => 'Доступ запрещён']);
+            exit;
+        }
+        
+        $userId = (int)($_POST['id'] ?? 0);
+        
+        if ($userId <= 0) {
+            echo json_encode(['success' => false, 'message' => 'Неверный ID']);
+            exit;
+        }
+        
+        $errors = [];
+        
+        $fullname = validateFullname($_POST['fullname'] ?? '', $errors);
+        $phone = validatePhone($_POST['phone'] ?? '', $errors);
+        $email = validateEmail($_POST['email'] ?? '', $errors);
+        $birthdate = validateBirthdate($_POST['birthdate'] ?? '', $errors);
+        $gender = validateGender($_POST['gender'] ?? '', $errors);
+        $biography = validateBiography($_POST['biography'] ?? '', $errors);
+        $languages = isset($_POST['languages']) ? (array)$_POST['languages'] : [];
+        
+        // Валидация языков
+        $stmt = $pdo->query("SELECT id FROM programming_languages");
+        $validIds = $stmt->fetchAll(PDO::FETCH_COLUMN);
+        $validLanguages = [];
+        foreach ($languages as $langId) {
+            if (in_array($langId, $validIds)) {
+                $validLanguages[] = (int)$langId;
+            }
+        }
+        
+        if (!empty($errors)) {
+            echo json_encode(['success' => false, 'message' => 'Ошибки валидации', 'errors' => $errors]);
+            exit;
+        }
+        
+        try {
+            $pdo->beginTransaction();
+            
+            $stmt = $pdo->prepare("
+                UPDATE users SET 
+                    fullname = ?, phone = ?, email = ?, 
+                    birthdate = ?, gender = ?, biography = ?
+                WHERE id = ?
+            ");
+            $stmt->execute([$fullname, $phone, $email, $birthdate, $gender, $biography, $userId]);
+            
+            // Обновляем языки
+            $stmt = $pdo->prepare("DELETE FROM user_languages WHERE user_id = ?");
+            $stmt->execute([$userId]);
+            
+            $stmtLang = $pdo->prepare("INSERT INTO user_languages (user_id, language_id) VALUES (?, ?)");
+            foreach ($validLanguages as $langId) {
+                $stmtLang->execute([$userId, $langId]);
+            }
+            
+            $pdo->commit();
+            
+            echo json_encode(['success' => true, 'message' => 'Данные обновлены']);
+            
+        } catch (PDOException $e) {
+            $pdo->rollBack();
+            echo json_encode(['success' => false, 'message' => 'Ошибка: ' . $e->getMessage()]);
+        }
+        exit;
+    }
+    
+    // Если действие не распознано
+    echo json_encode(['success' => false, 'message' => 'Неизвестное действие']);
+    exit;
+}
 // Получение метода и пути
 $method = $_SERVER['REQUEST_METHOD'];
 $path = $_SERVER['PATH_INFO'] ?? '/';
