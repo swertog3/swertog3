@@ -26,12 +26,10 @@ function validatePhone($phone, &$errors) {
         $errors['phone'] = 'Телефон обязателен для заполнения';
         return false;
     }
-    // Российские номера: +7, 8, или 7, затем 10 цифр
     if (!preg_match('/^(\+7|7|8)?[\s\-]?\(?[0-9]{3}\)?[\s\-]?[0-9]{3}[\s\-]?[0-9]{2}[\s\-]?[0-9]{2}$/', $phone)) {
         $errors['phone'] = 'Введите корректный номер телефона';
         return false;
     }
-    // Нормализация номера
     $phone = preg_replace('/[^\d+]/', '', $phone);
     if (strlen($phone) === 10) $phone = '7' . $phone;
     if (strlen($phone) === 11 && $phone[0] === '8') $phone = '7' . substr($phone, 1);
@@ -97,7 +95,6 @@ function validateLanguages($languages, &$errors) {
         return false;
     }
     
-    // Получаем допустимые ID языков из БД
     $stmt = $pdo->query("SELECT id FROM programming_languages");
     $validIds = $stmt->fetchAll(PDO::FETCH_COLUMN);
     
@@ -123,7 +120,6 @@ function validateBiography($bio, &$errors) {
         $errors['biography'] = 'Биография не должна превышать 5000 символов';
         return false;
     }
-    // Защита от XSS
     return htmlspecialchars($bio, ENT_QUOTES, 'UTF-8');
 }
 
@@ -138,25 +134,16 @@ function validateContract($contract, &$errors) {
 
 // Генерация логина и пароля
 function generateCredentials($fullname, $email) {
-    // Вариант 1: Генерируем логин из email (самый надёжный)
     $emailParts = explode('@', $email);
     $login = $emailParts[0];
-    
-    // Оставляем только буквы, цифры, точки и подчёркивания
     $login = preg_replace('/[^a-zA-Z0-9._]/', '', $login);
-    
-    // Обрезаем до 50 символов
     $login = substr($login, 0, 40);
-    
-    // Добавляем случайные цифры, чтобы избежать дубликатов
     $login .= rand(100, 999);
     
-    // Убеждаемся, что логин не пустой
     if (empty($login)) {
         $login = 'user' . rand(10000, 99999);
     }
     
-    // Генерация пароля (только ASCII символы)
     $password = generateRandomPassword(10);
     $passwordHash = password_hash($password, PASSWORD_DEFAULT);
     
@@ -164,23 +151,20 @@ function generateCredentials($fullname, $email) {
 }
 
 function generateRandomPassword($length = 10) {
-    // Только безопасные ASCII символы
     $chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
     return substr(str_shuffle($chars), 0, $length);
 }
 
 function transliterate($text) {
-    // Транслитерация без mbstring
     $cyr = ['а','б','в','г','д','е','ё','ж','з','и','й','к','л','м','н','о','п','р','с','т','у','ф','х','ц','ч','ш','щ','ъ','ы','ь','э','ю','я',
             'А','Б','В','Г','Д','Е','Ё','Ж','З','И','Й','К','Л','М','Н','О','П','Р','С','Т','У','Ф','Х','Ц','Ч','Ш','Щ','Ъ','Ы','Ь','Э','Ю','Я'];
     $lat = ['a','b','v','g','d','e','yo','zh','z','i','y','k','l','m','n','o','p','r','s','t','u','f','kh','ts','ch','sh','sch','','y','','e','yu','ya',
             'A','B','V','G','D','E','Yo','Zh','Z','I','Y','K','L','M','N','O','P','R','S','T','U','F','Kh','Ts','Ch','Sh','Sch','','Y','','E','Yu','Ya'];
     
-    // Вместо mb_strtolower используем обычную, она работает с ASCII
     return str_replace($cyr, $lat, $text);
 }
 
-// Сохранение данных в cookies при успешной отправке (на год)
+// Сохранение данных в cookies
 function saveToCookies($data) {
     $cookieData = [
         'fullname' => $data['fullname'] ?? '',
@@ -193,7 +177,6 @@ function saveToCookies($data) {
     setcookie('saved_form_data', json_encode($cookieData), time() + 365*24*3600, '/', '', false, true);
 }
 
-// Загрузка данных из cookies
 function loadFromCookies() {
     if (isset($_COOKIE['saved_form_data'])) {
         return json_decode($_COOKIE['saved_form_data'], true);
@@ -201,13 +184,11 @@ function loadFromCookies() {
     return [];
 }
 
-// Сохранение ошибок в cookies (до конца сессии)
 function saveErrorsToCookies($errors, $oldInput) {
     setcookie('form_errors', json_encode($errors), 0, '/', '', false, true);
     setcookie('old_input', json_encode($oldInput), 0, '/', '', false, true);
 }
 
-// Загрузка ошибок из cookies
 function loadErrorsFromCookies() {
     $errors = [];
     $oldInput = [];
@@ -222,7 +203,6 @@ function loadErrorsFromCookies() {
     return ['errors' => $errors, 'oldInput' => $oldInput];
 }
 
-// Аудит действий
 function auditLog($userId, $action, $details = null) {
     global $pdo;
     $stmt = $pdo->prepare("INSERT INTO audit_log (user_id, action, ip_address, user_agent, details) VALUES (?, ?, ?, ?, ?)");
@@ -235,11 +215,42 @@ function auditLog($userId, $action, $details = null) {
     ]);
 }
 
-// Проверка авторизации для админки
 function checkAdminAuth() {
     if (!isset($_SESSION['user_id']) || !isset($_SESSION['is_admin']) || $_SESSION['is_admin'] !== true) {
         header('Location: index.php');
         exit;
     }
 }
-?>
+
+// ===== ДОБАВЬТЕ ЭТУ ФУНКЦИЮ =====
+// Аутентификация для API
+function authenticate() {
+    global $pdo;
+    
+    // Получаем заголовок Authorization
+    $headers = getallheaders();
+    $auth = $headers['Authorization'] ?? '';
+    
+    // Проверяем Bearer токен
+    if (preg_match('/Bearer\s+(.+)/', $auth, $matches)) {
+        $token = $matches[1];
+        $stmt = $pdo->prepare("SELECT id, login, is_admin FROM users WHERE session_token = ?");
+        $stmt->execute([$token]);
+        $user = $stmt->fetch();
+        if ($user) {
+            return $user;
+        }
+    }
+    
+    // Если нет токена, проверяем сессию (для админки)
+    if (isset($_SESSION['user_id'])) {
+        $stmt = $pdo->prepare("SELECT id, login, is_admin FROM users WHERE id = ?");
+        $stmt->execute([$_SESSION['user_id']]);
+        return $stmt->fetch();
+    }
+    
+    return null;
+}
+// ===== КОНЕЦ ДОБАВЛЕННОЙ ФУНКЦИИ =====
+
+// НЕТ ЗАКРЫВАЮЩЕГО ТЕГА ?>
