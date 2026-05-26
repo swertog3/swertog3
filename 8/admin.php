@@ -34,58 +34,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 }
 
 // Обработка удаления пользователя
-if ($isAdmin && isset($_GET['delete'])) {
-    $userId = (int)$_GET['delete'];
-    auditLog($_SESSION['user_id'], 'delete_user', ['deleted_id' => $userId]);
-    $stmt = $pdo->prepare("DELETE FROM users WHERE id = ?");
-    $stmt->execute([$userId]);
-    header('Location: admin.php');
-    exit;
-}
+
 
 // Обработка обновления пользователя
-if ($isAdmin && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_user'])) {
-    $userId = (int)$_POST['user_id'];
-    $fullname = $_POST['fullname'] ?? '';
-    $phone = $_POST['phone'] ?? '';
-    $email = $_POST['email'] ?? '';
-    $birthdate = $_POST['birthdate'] ?? '';
-    $gender = $_POST['gender'] ?? '';
-    $biography = $_POST['biography'] ?? '';
-    $languages = $_POST['languages'] ?? [];
-    
-    $errors = [];
-    validateFullname($fullname, $errors);
-    validatePhone($phone, $errors);
-    validateEmail($email, $errors);
-    validateBirthdate($birthdate, $errors);
-    validateGender($gender, $errors);
-    $validLanguages = validateLanguages($languages, $errors);
-    
-    if (empty($errors)) {
-        $pdo->beginTransaction();
-        
-        $stmt = $pdo->prepare("
-            UPDATE users SET fullname = ?, phone = ?, email = ?, birthdate = ?, gender = ?, biography = ?
-            WHERE id = ?
-        ");
-        $stmt->execute([$fullname, $phone, $email, $birthdate, $gender, $biography, $userId]);
-        
-        $stmt = $pdo->prepare("DELETE FROM user_languages WHERE user_id = ?");
-        $stmt->execute([$userId]);
-        
-        $stmtLang = $pdo->prepare("INSERT INTO user_languages (user_id, language_id) VALUES (?, ?)");
-        foreach ($validLanguages as $langId) {
-            $stmtLang->execute([$userId, $langId]);
-        }
-        
-        $pdo->commit();
-        auditLog($_SESSION['user_id'], 'edit_user', ['user_id' => $userId]);
-        $editSuccess = 'Данные пользователя обновлены';
-    } else {
-        $editError = 'Ошибки валидации';
-    }
-}
 
 // Получение всех пользователей для админа
 $users = [];
@@ -384,6 +335,119 @@ $languagesList = $pdo->query("SELECT id, name FROM programming_languages")->fetc
         }
     </style>
 </head>
+<script>
+// Функция удаления
+async function deleteUser(userId) {
+    if (!confirm('Вы уверены, что хотите удалить этого пользователя?')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch('api.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: 'action=delete_user&id=' + userId
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            alert('Пользователь успешно удалён');
+            location.reload();
+        } else {
+            alert('Ошибка: ' + result.message);
+        }
+    } catch (error) {
+        alert('Ошибка соединения: ' + error.message);
+    }
+}
+
+// Функция редактирования
+async function editUser(userId) {
+    // Собираем данные из формы
+    const fullname = document.getElementById('edit_fullname').value;
+    const phone = document.getElementById('edit_phone').value;
+    const email = document.getElementById('edit_email').value;
+    const birthdate = document.getElementById('edit_birthdate').value;
+    const gender = document.getElementById('edit_gender').value;
+    const biography = document.getElementById('edit_biography').value;
+    
+    // Собираем выбранные языки
+    const languagesSelect = document.getElementById('edit_languages');
+    const languages = [];
+    for (let option of languagesSelect.options) {
+        if (option.selected) {
+            languages.push(option.value);
+        }
+    }
+    
+    // Создаём FormData для отправки
+    const formData = new FormData();
+    formData.append('action', 'update_user');
+    formData.append('id', userId);
+    formData.append('fullname', fullname);
+    formData.append('phone', phone);
+    formData.append('email', email);
+    formData.append('birthdate', birthdate);
+    formData.append('gender', gender);
+    formData.append('biography', biography);
+    
+    for (let lang of languages) {
+        formData.append('languages[]', lang);
+    }
+    
+    try {
+        const response = await fetch('api.php', {
+            method: 'POST',
+            body: formData
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            alert('Данные обновлены');
+            location.reload();
+        } else {
+            alert('Ошибка: ' + result.message);
+        }
+    } catch (error) {
+        alert('Ошибка соединения: ' + error.message);
+    }
+}
+
+// Функция открытия модального окна
+function openEditModal(user) {
+    document.getElementById('edit_user_id').value = user.id;
+    document.getElementById('edit_fullname').value = user.fullname;
+    document.getElementById('edit_phone').value = user.phone;
+    document.getElementById('edit_email').value = user.email;
+    document.getElementById('edit_birthdate').value = user.birthdate;
+    document.getElementById('edit_gender').value = user.gender;
+    document.getElementById('edit_biography').value = user.biography || '';
+    
+    const langsSelect = document.getElementById('edit_languages');
+    const userLangs = user.languages_list ? user.languages_list.split(', ') : [];
+    for (let option of langsSelect.options) {
+        option.selected = userLangs.includes(option.text);
+    }
+    
+    document.getElementById('editModal').classList.add('active');
+}
+
+// Функция закрытия модального окна
+function closeEditModal() {
+    document.getElementById('editModal').classList.remove('active');
+}
+
+// Закрытие по клику вне окна
+document.getElementById('editModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeEditModal();
+    }
+});
+</script>
 <body>
     <div class="admin-header">
         <div class="container">
@@ -494,56 +558,66 @@ $languagesList = $pdo->query("SELECT id, name FROM programming_languages")->fetc
     
     <!-- Модальное окно редактирования -->
     <div id="editModal" class="modal">
-        <div class="modal-content">
-            <h3><i class="fas fa-edit"></i> Редактирование пользователя</h3>
-            <form method="POST">
-                <input type="hidden" name="edit_user" value="1">
-                <input type="hidden" name="user_id" id="edit_user_id">
-                
-                <div class="form-group">
-                    <label>ФИО</label>
-                    <input type="text" name="fullname" id="edit_fullname" required>
-                </div>
-                <div class="form-group">
-                    <label>Телефон</label>
-                    <input type="tel" name="phone" id="edit_phone" required>
-                </div>
-                <div class="form-group">
-                    <label>Email</label>
-                    <input type="email" name="email" id="edit_email" required>
-                </div>
-                <div class="form-group">
-                    <label>Дата рождения</label>
-                    <input type="date" name="birthdate" id="edit_birthdate" required>
-                </div>
-                <div class="form-group">
-                    <label>Пол</label>
-                    <select name="gender" id="edit_gender">
-                        <option value="male">Мужской</option>
-                        <option value="female">Женский</option>
-                        <option value="other">Другой</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Языки программирования</label>
-                    <select name="languages[]" id="edit_languages" multiple>
-                        <?php foreach ($languagesList as $lang): ?>
-                            <option value="<?php echo $lang['id']; ?>"><?php echo htmlspecialchars($lang['name']); ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Биография</label>
-                    <textarea name="biography" id="edit_biography" rows="3"></textarea>
-                </div>
-                
-                <div class="modal-buttons">
-                    <button type="submit" class="save-btn"><i class="fas fa-save"></i> Сохранить</button>
-                    <button type="button" class="cancel-btn" onclick="closeEditModal()"><i class="fas fa-times"></i> Отмена</button>
-                </div>
-            </form>
+    <div class="modal-content">
+        <h3><i class="fas fa-edit"></i> Редактирование пользователя</h3>
+        
+        <div id="editForm">
+            <input type="hidden" name="user_id" id="edit_user_id">
+            
+            <div class="form-group">
+                <label>ФИО</label>
+                <input type="text" name="fullname" id="edit_fullname" required>
+            </div>
+            
+            <div class="form-group">
+                <label>Телефон</label>
+                <input type="tel" name="phone" id="edit_phone" required>
+            </div>
+            
+            <div class="form-group">
+                <label>Email</label>
+                <input type="email" name="email" id="edit_email" required>
+            </div>
+            
+            <div class="form-group">
+                <label>Дата рождения</label>
+                <input type="date" name="birthdate" id="edit_birthdate" required>
+            </div>
+            
+            <div class="form-group">
+                <label>Пол</label>
+                <select name="gender" id="edit_gender">
+                    <option value="male">Мужской</option>
+                    <option value="female">Женский</option>
+                    <option value="other">Другой</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>Языки программирования</label>
+                <select name="languages[]" id="edit_languages" multiple>
+                    <?php foreach ($languagesList as $lang): ?>
+                        <option value="<?php echo $lang['id']; ?>"><?php echo htmlspecialchars($lang['name']); ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>Биография</label>
+                <textarea name="biography" id="edit_biography" rows="3"></textarea>
+            </div>
+            
+            <div class="modal-buttons">
+                <button type="button" class="save-btn" onclick="editUser(document.getElementById('edit_user_id').value)">
+                    <i class="fas fa-save"></i> Сохранить
+                </button>
+                <button type="button" class="cancel-btn" onclick="closeEditModal()">
+                    <i class="fas fa-times"></i> Отмена
+                </button>
+            </div>
         </div>
     </div>
+</div>
     
     <script>
         function openEditModal(user) {
