@@ -296,24 +296,22 @@ $csrfToken = generateCsrfToken();
             <h2 class="section-title">Регистрация <span>участника</span></h2>
             
             <div class="registration-form" id="registrationFormContainer">
-                <?php if (isset($_GET['success']) && $_GET['success'] == 1): ?>
-                    <div class="success-message">
-                        <?php 
+                //<?php if (isset($_GET['success']) && $_GET['success'] == 1): ?>
+                    //<div class="success-message">
+                        //<?php 
                         // ОТЛАДКА: посмотрим, что в сессии
-                        echo "<!-- DEBUG: " . print_r($_SESSION, true) . " -->";
+                        //echo "<!-- DEBUG: " . print_r($_SESSION, true) . " -->";
                         
-                        $login = $_SESSION['last_registered_login'] ?? '';
-                        $password = $_SESSION['last_registered_password'] ?? '';
-                        ?>
-                        <p><strong>Ваш логин:</strong> <?php echo htmlspecialchars($login ?: 'Ошибка: логин не сохранён'); ?></p>
-                        <p><strong>Ваш пароль:</strong> <?php echo htmlspecialchars($password ?: 'Ошибка: пароль не сохранён'); ?></p>
-                        <?php 
-                        // НЕ удаляем сразу, чтобы увидеть
-                        // unset($_SESSION['last_registered_login']);
-                        // unset($_SESSION['last_registered_password']);
-                        ?>
-                    </div>
-                <?php endif; ?>
+                        //$login = $_SESSION['last_registered_login'] ?? '';
+                        //$password = $_SESSION['last_registered_password'] ?? '';
+                        //?>
+                        //<p><strong>Ваш логин:</strong> <?php echo htmlspecialchars($login ?: 'Ошибка: логин не сохранён'); ?></p>
+                        //<p><strong>Ваш пароль:</strong> <?php echo htmlspecialchars($password ?: 'Ошибка: пароль не сохранён'); ?></p>
+                        //<?php 
+                       
+                        //?>
+                    //</div>
+                //<?php endif; ?>
                 
                 <?php if (isset($errors['general'])): ?>
                     <div class="form-message error" style="display:block; background:#f8d7da; color:#721c24; padding:15px; border-radius:8px; margin-bottom:20px;">
