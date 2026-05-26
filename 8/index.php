@@ -321,7 +321,7 @@ $csrfToken = generateCsrfToken();
                     </div>
                 <?php endif; ?>
                 
-                <form id="mainForm" method="POST" action="index.php" data-api-url="api.php">
+                <form id="mainForm" data-api-url="api.php">
                     <input type="hidden" name="csrf_token" value="<?php echo $csrfToken; ?>">
                     
                     <!-- ФИО -->
@@ -497,9 +497,7 @@ $csrfToken = generateCsrfToken();
                                 formMessage.innerHTML += credHtml;
                             }
                             
-                            setTimeout(() => {
-                                window.location.href = 'index.php?success=1';
-                            }, 2000);
+                           
                         } else {
                             formMessage.className = 'form-message error';
                             formMessage.innerHTML = '<i class="fas fa-exclamation-triangle"></i> ' + result.message;
